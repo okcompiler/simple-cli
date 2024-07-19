@@ -30,7 +30,7 @@ func TestParseArgs(t *testing.T) {
 		},
 		{
 			args:   []string{"1", "foo"},
-			err:    errors.New("Invalid number of arguments"),
+			err:    errors.New("invalid number of arguments"),
 			config: config{printUsage: false, numTimes: 0},
 		},
 	}
