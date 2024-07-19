@@ -21,7 +21,7 @@ A greeter application which prints the name you entered <integer> number of time
 `, os.Args[0])
 
 func printUsage(w io.Writer) {
-	fmt.Fprintf(w, usageString)
+	fmt.Fprint(w, usageString)
 }
 
 func parseArgs(args []string) (config, error) {
@@ -30,9 +30,8 @@ func parseArgs(args []string) (config, error) {
 	c := config{}
 
 	if len(args) != 1 {
-		return c, errors.New("Invalid number of arguments")
+		return c, errors.New("invalid number of arguments")
 	}
-
 	if args[0] == "-h" || args[0] == "--help" {
 		c.printUsage = true
 		return c, nil
@@ -48,8 +47,8 @@ func parseArgs(args []string) (config, error) {
 }
 
 func validateArgs(c config) error {
-	if !(c.numTimes > 0) {
-		return errors.New("Must specify a number greater than 0")
+	if c.numTimes <= 0 {
+		return errors.New("must specify a number greater than 0")
 	}
 
 	return nil
@@ -75,13 +74,13 @@ func greetUser(c config, name string, w io.Writer) {
 	msg := fmt.Sprintf("Nice to meet you %s\n", name)
 
 	for i := 0; i < c.numTimes; i++ {
-		fmt.Fprintf(w, msg)
+		fmt.Fprint(w, msg)
 	}
 }
 
 func getName(r io.Reader, w io.Writer) (string, error) {
 	msg := "Your name please? Press the Enter key when done.\n"
-	fmt.Fprintf(w, msg)
+	fmt.Fprint(w, msg)
 
 	scanner := bufio.NewScanner(r)
 	scanner.Scan()
@@ -90,7 +89,7 @@ func getName(r io.Reader, w io.Writer) (string, error) {
 	}
 	name := scanner.Text()
 	if len(name) == 0 {
-		return "", errors.New("You didn't enter your name")
+		return "", errors.New("you didn't enter your name")
 	}
 
 	return name, nil
