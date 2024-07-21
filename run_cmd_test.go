@@ -15,10 +15,6 @@ func TestRunCmd(t *testing.T) {
 		err    error
 	}{
 		{
-			c:      config{printUsage: true},
-			output: usageString,
-		},
-		{
 			c:      config{numTimes: 5},
 			input:  "",
 			output: strings.Repeat("Your name please? Press the Enter key when done.\n", 1),

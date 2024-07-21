@@ -3,46 +3,28 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 )
 
 type config struct {
-	numTimes   int
-	printUsage bool
+	numTimes int
 }
 
-var usageString = fmt.Sprintf(`
-Usage: %s <integer> [-h|--help]
-
-A greeter application which prints the name you entered <integer> number of times.
-`, os.Args[0])
-
-func printUsage(w io.Writer) {
-	fmt.Fprint(w, usageString)
-}
-
-func parseArgs(args []string) (config, error) {
-	var numTimes int
-	var err error
+func parseArgs(w io.Writer, args []string) (config, error) {
 	c := config{}
-
-	if len(args) != 1 {
-		return c, errors.New("invalid number of arguments")
-	}
-	if args[0] == "-h" || args[0] == "--help" {
-		c.printUsage = true
-		return c, nil
-	}
-
-	numTimes, err = strconv.Atoi(args[0])
+	fs := flag.NewFlagSet("greeter", flag.ContinueOnError)
+	fs.SetOutput(w)
+	fs.IntVar(&c.numTimes, "n", 0, "Number of times to greet")
+	err := fs.Parse(args)
 	if err != nil {
 		return c, err
 	}
-	c.numTimes = numTimes
-
+	if fs.NArg() != 0 {
+		return c, errors.New("positional arguments specified")
+	}
 	return c, nil
 }
 
@@ -55,11 +37,6 @@ func validateArgs(c config) error {
 }
 
 func runCmd(r io.Reader, w io.Writer, c config) error {
-	if c.printUsage {
-		printUsage(w)
-		return nil
-	}
-
 	name, err := getName(r, w)
 	if err != nil {
 		return err
@@ -96,24 +73,16 @@ func getName(r io.Reader, w io.Writer) (string, error) {
 }
 
 func main() {
-	c, err := parseArgs(os.Args[1:])
+	c, err := parseArgs(os.Stderr, os.Args[1:])
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err)
-		printUsage(os.Stdout)
 		os.Exit(1)
 	}
-	if c.printUsage {
-		printUsage(os.Stdout)
-		os.Exit(1)
-	}
-
 	err = validateArgs(c)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err)
-		printUsage(os.Stdout)
 		os.Exit(1)
 	}
-
 	err = runCmd(os.Stdin, os.Stdout, c)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err)

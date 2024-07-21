@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -59,36 +58,30 @@ func TestApplication(t *testing.T) {
 		{
 			args: []string{},
 			expectedOutputLines: []string{
-				"invalid number of arguments",
-				"",
-				fmt.Sprintf("Usage: %s <integer> [-h|--help]", binaryPath),
-				"",
-				"A greeter application which prints the name you entered <integer> number of times.",
-				"",
+				"must specify a number greater than 0",
 			},
 			expectedExitCode: 1,
 		},
 		{
 			args: []string{"-h"},
 			expectedOutputLines: []string{
-				"",
-				fmt.Sprintf("Usage: %s <integer> [-h|--help]", binaryPath),
-				"",
-				"A greeter application which prints the name you entered <integer> number of times.",
-				"",
+				"flag: help requested",
 			},
 			expectedExitCode: 1,
 		},
 		{
-			args:                []string{"a"},
-			expectedOutputLines: []string{},
-			expectedExitCode:    1,
+			args: []string{"a"},
+			expectedOutputLines: []string{
+				"positional arguments specified",
+			},
+			expectedExitCode: 1,
 		},
 		{
-			args:  []string{"2"},
+			args:  []string{"-n", "2"},
 			input: "First Last",
 			expectedOutputLines: []string{
 				"Your name please? Press the Enter key when done.",
+				"Nice to meet you First Last",
 				"Nice to meet you First Last",
 			},
 			expectedExitCode: 0,
