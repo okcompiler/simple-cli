@@ -5,12 +5,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 )
 
 type config struct {
-	numTimes int
+	numTimes     int
+	htmlFilePath string
 }
 
 func parseArgs(w io.Writer, args []string) (config, error) {
@@ -18,6 +20,7 @@ func parseArgs(w io.Writer, args []string) (config, error) {
 	fs := flag.NewFlagSet("greeter", flag.ContinueOnError)
 	fs.SetOutput(w)
 	fs.IntVar(&c.numTimes, "n", 0, "Number of times to greet")
+	fs.StringVar(&c.htmlFilePath, "o", "", "Create an HTML document at the file path specified")
 	err := fs.Parse(args)
 	if err != nil {
 		return c, err
@@ -29,7 +32,7 @@ func parseArgs(w io.Writer, args []string) (config, error) {
 }
 
 func validateArgs(c config) error {
-	if c.numTimes <= 0 {
+	if c.numTimes <= 0 && len(c.htmlFilePath) == 0 {
 		return errors.New("must specify a number greater than 0")
 	}
 
@@ -42,9 +45,27 @@ func runCmd(r io.Reader, w io.Writer, c config) error {
 		return err
 	}
 
+	if len(c.htmlFilePath) != 0 {
+		return greetWithHTML(c.htmlFilePath, name)
+	}
+
 	greetUser(c, name, w)
 
 	return nil
+}
+
+func greetWithHTML(path, name string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	tmpl, err := template.New("greeterHTML").Parse("<h1>Hello {{.}}</h1>")
+	if err != nil {
+		return err
+	}
+	return tmpl.Execute(f, name)
 }
 
 func greetUser(c config, name string, w io.Writer) {
