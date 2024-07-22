@@ -63,16 +63,14 @@ func TestApplication(t *testing.T) {
 			expectedExitCode: 1,
 		},
 		{
-			args: []string{"-h"},
-			expectedOutputLines: []string{
-				"flag: help requested",
-			},
-			expectedExitCode: 1,
+			args:                []string{"-h"},
+			expectedOutputLines: []string{},
+			expectedExitCode:    1,
 		},
 		{
 			args: []string{"a"},
 			expectedOutputLines: []string{
-				"positional arguments specified",
+				"must specify a number greater than 0",
 			},
 			expectedExitCode: 1,
 		},
@@ -98,12 +96,12 @@ func TestApplication(t *testing.T) {
 
 		err := cmd.Run()
 		if err != nil && tc.expectedExitCode == 0 {
-			t.Fatalf("Expected application to exit without an error. Got: %v", err)
+			t.Fatalf("Expected application to exit without an error. got: %v", err)
 		}
 		if cmd.ProcessState.ExitCode() != tc.expectedExitCode {
 			t.Log(byteBuf.String())
 			t.Fatalf(
-				"Expected application to have exit code: %v. Got: %v",
+				"Expected application to have exit code: %v. got: %v",
 				tc.expectedExitCode,
 				cmd.ProcessState.ExitCode(),
 			)
@@ -114,7 +112,7 @@ func TestApplication(t *testing.T) {
 		for num := range tc.expectedOutputLines {
 			if lines[num] != tc.expectedOutputLines[num] {
 				t.Fatalf(
-					"Expected output line to be: %v, Got: %v",
+					"Expected output line to be: %v, got: %v",
 					tc.expectedOutputLines[num],
 					lines[num],
 				)

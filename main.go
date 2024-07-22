@@ -13,20 +13,38 @@ import (
 type config struct {
 	numTimes     int
 	htmlFilePath string
+	name         string
 }
+
+var errInvalidPosArgSpecified = errors.New("more than one positional argument specified")
 
 func parseArgs(w io.Writer, args []string) (config, error) {
 	c := config{}
 	fs := flag.NewFlagSet("greeter", flag.ContinueOnError)
 	fs.SetOutput(w)
+	fs.Usage = func() {
+		usageString := `
+A greeter application which prints the name you entered a specified
+number of times.
+
+Usage of %s: <options> [name]
+
+`
+		fmt.Fprintf(w, usageString, fs.Name())
+		fmt.Fprintln(w, "Options:")
+		fs.PrintDefaults()
+	}
 	fs.IntVar(&c.numTimes, "n", 0, "Number of times to greet")
 	fs.StringVar(&c.htmlFilePath, "o", "", "Create an HTML document at the file path specified")
 	err := fs.Parse(args)
 	if err != nil {
 		return c, err
 	}
-	if fs.NArg() != 0 {
-		return c, errors.New("positional arguments specified")
+	if fs.NArg() > 1 {
+		return c, errInvalidPosArgSpecified
+	}
+	if fs.NArg() == 1 {
+		c.name = fs.Arg(0)
 	}
 	return c, nil
 }
@@ -40,17 +58,19 @@ func validateArgs(c config) error {
 }
 
 func runCmd(r io.Reader, w io.Writer, c config) error {
-	name, err := getName(r, w)
-	if err != nil {
-		return err
+	var err error
+	if len(c.name) == 0 {
+		c.name, err = getName(r, w)
+		if err != nil {
+			return err
+		}
 	}
 
 	if len(c.htmlFilePath) != 0 {
-		return greetWithHTML(c.htmlFilePath, name)
+		return greetWithHTML(c.htmlFilePath, c.name)
 	}
 
-	greetUser(c, name, w)
-
+	greetUser(c, w)
 	return nil
 }
 
@@ -68,8 +88,8 @@ func greetWithHTML(path, name string) error {
 	return tmpl.Execute(f, name)
 }
 
-func greetUser(c config, name string, w io.Writer) {
-	msg := fmt.Sprintf("Nice to meet you %s\n", name)
+func greetUser(c config, w io.Writer) {
+	msg := fmt.Sprintf("Nice to meet you %s\n", c.name)
 
 	for i := 0; i < c.numTimes; i++ {
 		fmt.Fprint(w, msg)
@@ -96,7 +116,9 @@ func getName(r io.Reader, w io.Writer) (string, error) {
 func main() {
 	c, err := parseArgs(os.Stderr, os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
+		if errors.Is(err, errInvalidPosArgSpecified) {
+			fmt.Fprintln(os.Stdout, err)
+		}
 		os.Exit(1)
 	}
 	err = validateArgs(c)

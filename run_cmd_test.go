@@ -9,31 +9,36 @@ import (
 
 func TestRunCmd(t *testing.T) {
 	tests := []struct {
-		c      config
+		config
 		input  string
 		output string
 		err    error
 	}{
 		{
-			c:      config{numTimes: 5},
+			config: config{numTimes: 5},
 			input:  "",
 			output: strings.Repeat("Your name please? Press the Enter key when done.\n", 1),
 			err:    errors.New("you didn't enter your name"),
 		},
 		{
-			c:     config{numTimes: 5},
-			input: "First Last",
+			config: config{numTimes: 5},
+			input:  "First Last",
 			output: "Your name please? Press the Enter key when done.\n" + strings.Repeat(
 				"Nice to meet you First Last\n",
 				5,
 			),
+		},
+		{
+			config: config{numTimes: 5, name: "First Last"},
+			input:  "",
+			output: strings.Repeat("Nice to meet you First Last\n", 5),
 		},
 	}
 
 	byteBuf := new(bytes.Buffer)
 	for _, tc := range tests {
 		r := strings.NewReader(tc.input)
-		err := runCmd(r, byteBuf, tc.c)
+		err := runCmd(r, byteBuf, tc.config)
 		if err != nil && tc.err == nil {
 			t.Fatalf("Expected nil error, got: %v\n", err)
 		}
